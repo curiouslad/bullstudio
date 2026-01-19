@@ -48,7 +48,7 @@ export function WorkspaceSettingsContent({
   );
 
   const handleEditWorkspace = () => {
-    if (!workspace) return;
+    if (!workspace || !currentOrganization) return;
     dialogStore.trigger({
       id: "edit-workspace",
       component: EditWorkspaceDialog,
@@ -56,9 +56,9 @@ export function WorkspaceSettingsContent({
         workspaceId: workspace.id,
         currentName: workspace.name,
         currentSlug: workspace.slug,
-        onSuccess: () => {
-          if (workspace.slug !== workspaceSlug) {
-            router.push(`/${workspace.slug}/settings`);
+        onSuccess: (data: { name: string; slug: string }) => {
+          if (data.slug !== workspaceSlug) {
+            router.push(`/${currentOrganization.slug}/${data.slug}/settings`);
           }
         },
       },

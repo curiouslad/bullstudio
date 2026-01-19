@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { Bell, Database, LayoutDashboard, ListTodo } from "lucide-react";
+import {
+  ArrowLeft,
+  Bell,
+  CreditCard,
+  Database,
+  LayoutDashboard,
+  ListTodo,
+  Settings,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -24,6 +33,8 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { organizationSlug: orgSlug, workspace: workspaceSlug } = useParams();
 
+  const isManageMode = pathname.includes("/manage/");
+
   const getItemUrl = (base: string) => {
     return `/${orgSlug}/${workspaceSlug ?? ""}${base}`;
   };
@@ -33,6 +44,10 @@ export function AppSidebar() {
     if (isBasePath) {
       return pathname === href;
     }
+    return pathname.startsWith(href);
+  };
+
+  const isManageActive = (href: string) => {
     return pathname.startsWith(href);
   };
 
@@ -59,6 +74,19 @@ export function AppSidebar() {
     },
   ];
 
+  const manageNavItems = [
+    {
+      title: "Settings",
+      href: `/${orgSlug}/manage/settings`,
+      icon: Settings,
+    },
+    {
+      title: "Billing",
+      href: `/${orgSlug}/manage/billing`,
+      icon: CreditCard,
+    },
+  ];
+
   return (
     <Sidebar collapsible="icon" className="border-r-0">
       {/* Header with Logo */}
@@ -66,40 +94,94 @@ export function AppSidebar() {
         <Logo />
       </SidebarHeader>
 
-      {/* Workspace Selector */}
       <SidebarContent>
-        <SidebarGroup className="py-2">
-          <WorkspaceSelector />
-        </SidebarGroup>
+        {isManageMode ? (
+          <>
+            {/* Back to Dashboard */}
+            <SidebarGroup className="py-2">
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip="Back to Dashboard"
+                    className="h-10 transition-colors"
+                  >
+                    <Link href={`/${orgSlug}`}>
+                      <ArrowLeft className="size-4" />
+                      <span className="font-medium">Back to Dashboard</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
 
-        <SidebarSeparator className="mx-0" />
+            <SidebarSeparator className="mx-0" />
 
-        {/* Main Navigation */}
-        <SidebarGroup className="py-4">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => {
-                const active = isActive(item.href);
+            {/* Organization Management Navigation */}
+            <SidebarGroup className="py-4">
+              <SidebarGroupLabel>Organization</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {manageNavItems.map((item) => {
+                    const active = isManageActive(item.href);
 
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      tooltip={item.title}
-                      className="h-10 transition-colors"
-                    >
-                      <Link href={item.href}>
-                        <item.icon className="size-4" />
-                        <span className="font-medium">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={active}
+                          tooltip={item.title}
+                          className="h-10 transition-colors"
+                        >
+                          <Link href={item.href}>
+                            <item.icon className="size-4" />
+                            <span className="font-medium">{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        ) : (
+          <>
+            {/* Workspace Selector */}
+            <SidebarGroup className="py-2">
+              <WorkspaceSelector />
+            </SidebarGroup>
+
+            <SidebarSeparator className="mx-0" />
+
+            {/* Main Navigation */}
+            <SidebarGroup className="py-4">
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navItems.map((item) => {
+                    const active = isActive(item.href);
+
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={active}
+                          tooltip={item.title}
+                          className="h-10 transition-colors"
+                        >
+                          <Link href={item.href}>
+                            <item.icon className="size-4" />
+                            <span className="font-medium">{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
 
       {/* Footer with User Nav */}

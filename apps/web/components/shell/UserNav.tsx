@@ -116,13 +116,6 @@ export function UserNav() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="cursor-pointer">
-              <Link href={`/${orgSlug}/billing`}>
-                <CreditCard className="mr-2 size-4" />
-                Billing
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => signOut({ callbackUrl: "/login" })}
               className="text-destructive focus:text-destructive cursor-pointer"

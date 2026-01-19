@@ -78,6 +78,10 @@ export function WorkspaceSelector() {
     router.push(`/${currentOrgSlug}/${currentWorkspace.slug}/settings`);
   }, [currentWorkspace, currentOrgSlug, router]);
 
+  const handleOrganizationSettings = useCallback(() => {
+    router.push(`/${currentOrgSlug}/manage/settings`);
+  }, [currentOrgSlug, router]);
+
   const isLoading = isLoadingOrgs || isLoadingWorkspaces;
 
   if (isLoading) {
@@ -181,6 +185,15 @@ export function WorkspaceSelector() {
                 <span>Workspace settings</span>
               </DropdownMenuItem>
             )}
+
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleOrganizationSettings}
+              className="cursor-pointer gap-2"
+            >
+              <Building2 className="size-4" />
+              <span>Organization settings</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

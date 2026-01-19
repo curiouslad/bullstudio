@@ -36,7 +36,7 @@ export type EditWorkspaceDialogProps = {
   workspaceId: string;
   currentName: string;
   currentSlug: string;
-  onSuccess?: () => void;
+  onSuccess?: (data: { name: string; slug: string }) => void;
 };
 
 export function EditWorkspaceDialog({
@@ -60,10 +60,10 @@ export function EditWorkspaceDialog({
   );
 
   const updateWorkspace = trpc.workspace.update.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Workspace updated successfully");
       utils.workspace.list.invalidate();
-      onSuccess?.();
+      onSuccess?.({ name: data.name, slug: data.slug });
       onOpenChange?.(false);
     },
     onError: (error) => {
