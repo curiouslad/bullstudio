@@ -5,6 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import Google from "next-auth/providers/google";
 import { defaultClient } from "@bullstudio/email/client";
 import { MagicLinkEmail, MagicLinkEmailProps } from "@bullstudio/email";
+import GitHub from "next-auth/providers/github";
 
 export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
@@ -18,6 +19,7 @@ export const authConfig: NextAuthConfig = {
     Resend({
       from: "noreply@scheduler.barbell-consulting.com",
       sendVerificationRequest: async ({ identifier, url }) => {
+        console.log("Sending magic link to:", identifier, "with URL:", url);
         const props: MagicLinkEmailProps = {
           magicLink: url,
         };
@@ -30,6 +32,7 @@ export const authConfig: NextAuthConfig = {
       },
     }),
     Google,
+    GitHub,
   ],
   callbacks: {
     session: async ({ session, token }) => {

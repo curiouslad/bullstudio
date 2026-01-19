@@ -36,7 +36,7 @@ export function WorkspaceStep({
 }: WorkspaceStepProps) {
   const { data, updateData, goToPreviousStep, isFirstStep } = onboarding;
 
-  const { control, handleSubmit, formState, watch, setValue } =
+  const { control, handleSubmit, formState, watch, setValue, getValues } =
     useForm<WorkspaceFormValues>({
       resolver: zodResolver(workspaceSchema),
       defaultValues: {
@@ -55,6 +55,13 @@ export function WorkspaceStep({
       .replace(/^-|-$/g, "");
     setValue("slug", slug, { shouldValidate: true, shouldDirty: true });
   }, [name, setValue]);
+
+  useEffect(() => {
+    updateData({
+      workspaceName: getValues("name"),
+      workspaceSlug: getValues("slug"),
+    });
+  }, [formState, getValues, updateData]);
 
   const onSubmit = (formData: WorkspaceFormValues) => {
     updateData({
