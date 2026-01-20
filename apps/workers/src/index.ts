@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 import { scheduleAlertChecks } from "./queues/alert-check";
 import { createAlertCheckerWorker } from "./workers/alert-checker";
 import { createEmailSenderWorker } from "./workers/email-sender";

@@ -4,8 +4,9 @@
   "exclude": ["node_modules"],
   "compilerOptions": {
     "outDir": "dist",
+    "moduleResolution": "bundler",
     "rootDir": "src",
     "strict": true,
     "jsx": "react-jsx"
-  },
+  }
 }

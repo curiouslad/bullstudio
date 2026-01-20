@@ -5,8 +5,9 @@
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
@@ -15,13 +16,11 @@
     "@bullstudio/prisma": "workspace:*",
     "@bullstudio/queue": "workspace:*",
     "bullmq": "^5.34.8",
-    "dotenv": "^17.2.3",
     "ioredis": "^5.4.2"
   },
   "devDependencies": {
     "@bullstudio/typescript-config": "workspace:*",
-    "@types/node": "^24.10.1",
-    "tsx": "^4.20.3",
+    "@types/bun": "^1.2.10",
     "typescript": "^5.9.3"
   }
 }
