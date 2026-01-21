@@ -1,31 +1,106 @@
-# shadcn/ui monorepo template
+<div align="center">
+  <img src="assets/logo.svg" height="100px" />
+</div>
 
-This template is for creating a monorepo with shadcn/ui.
+<p align="center">
+	<h1 align="center"><b>bullstudio</b></h1>
+<p align="center">
+    Modern queue management for BullMQ.
+    <br />
+    <br />
+    <a href="https://bullstudio.dev">Website</a>
+    <a href="https://docs.bullstudio.dev">Docs</a>
+  </p>
+</p>
 
-## Usage
+---
+
+## What is bullstudio?
+
+bullstudio is a cloud-hosted dashboard that gives you real-time visibility into your Bull and BullMQ job queues. It's built for backend developers and DevOps teams who need to monitor queue health, debug failed jobs, and get alerted before backlogs become outages. Unlike basic Redis GUIs or self-hosted alternatives, bullstudio offers intelligent alerting, multi-environment support, and a polished UI designed for production workflows.
+
+<!-- TODO: Add screenshot -->
+<!-- ![Dashboard Overview](docs/images/dashboard.png) -->
+
+---
+
+## Tech Stack
+
+| Layer     | Technology                      |
+| --------- | ------------------------------- |
+| Framework | Next.js 16 (App Router)         |
+| Language  | TypeScript                      |
+| Styling   | Tailwind CSS + shadcn/ui        |
+| API       | tRPC                            |
+| Database  | PostgreSQL + Prisma             |
+| Auth      | Auth.js (Google, GitHub, Email) |
+| Payments  | Polar                           |
+| Email     | Resend                          |
+| Bg-Jobs   | BullMQ                          |
+| Monorepo  | Turborepo + pnpm                |
+
+---
+
+## Features
+
+- **Real-time queue monitoring** - View job counts, throughput, and worker status across all your queues
+- **Job management** - Inspect, retry, or delete jobs with filtering by status, name, and timestamp
+- **Intelligent alerts** - Get notified on failure spikes, growing backlogs, slow processing times, or missing workers
+- **Multi-connection support** - Monitor multiple Redis instances from a single dashboard
+- **Team collaboration** - Organizations and workspaces with role-based access control
+- **Encrypted credentials** - All Redis connection details stored with AES encryption
+
+---
+
+## Quickstart
+
+### Prerequisites
+
+- Node.js 20+
+- pnpm 10+
+- PostgreSQL database
+- Redis instance to monitor
+
+### 1. Clone and install
 
 ```bash
-pnpm dlx shadcn@latest init
+git clone https://github.com/your-org/bullstudio.git
+cd bullstudio
+pnpm install
 ```
 
-## Adding components
-
-To add components to your app, run the following command at the root of your `web` app:
+### 2. Configure environment
 
 ```bash
-pnpm dlx shadcn@latest add button -c apps/web
+cp .env.example .env.local
 ```
 
-This will place the ui components in the `packages/ui/src/components` directory.
+Edit `.env.local` with your credentials:
 
-## Tailwind
-
-Your `tailwind.config.ts` and `globals.css` are already set up to use the components from the `ui` package.
-
-## Using components
-
-To use the components in your app, import them from the `ui` package.
-
-```tsx
-import { Button } from "@bullstudio/ui/components/button"
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/bullstudio"
+AUTH_SECRET="your-auth-secret"
+AUTH_GOOGLE_ID="..."
+AUTH_GOOGLE_SECRET="..."
 ```
+
+### 3. Setup database
+
+```bash
+pnpm prisma:generate
+pnpm prisma:migrate-dev
+```
+
+### 4. Run development server
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and create your first workspace.
+
+---
+
+## License
+
+bullstudio is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE). You are free to use, modify, and distribute this software, but any modifications or derivative works must also be open-sourced under the same license.
