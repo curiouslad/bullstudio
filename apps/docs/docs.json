@@ -45,6 +45,13 @@
             ]
           },
           {
+            "group": "Self-Hosting",
+            "pages": [
+              "self-hosting/local-development",
+              "self-hosting/self-hosting"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "guides/setting-up-alerts",

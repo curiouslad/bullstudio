@@ -1,12 +1,14 @@
 import { prisma } from "@bullstudio/prisma";
-import { polar } from "../../client";
+import { type Polar } from "@polar-sh/sdk";
 
 export const createCustomer = async ({
+  polar,
   userId,
   email,
   name,
   orgId,
 }: {
+  polar: Polar;
   userId: string;
   email: string;
   name: string;
@@ -24,7 +26,13 @@ export const createCustomer = async ({
   return newCustomer.id;
 };
 
-export const ensureCustomer = async ({ orgId }: { orgId: string }) => {
+export const ensureCustomer = async ({
+  orgId,
+  polar,
+}: {
+  orgId: string;
+  polar: Polar;
+}) => {
   const org = await prisma.organization.findUnique({
     where: { id: orgId },
     select: {

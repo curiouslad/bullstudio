@@ -1,5 +1,5 @@
 import { prisma, SubscriptionPlan } from "@bullstudio/prisma";
-import { polar } from "../../client";
+import { getPolarClient } from "../../client";
 import { getPlanFeatures, PLAN_FEATURES } from "../../plans";
 import { ensureCustomer } from "../customer";
 
@@ -22,7 +22,7 @@ export type SubscriptionDetails = {
 };
 
 export async function getSubscriptionDetails(
-  orgId: string
+  orgId: string,
 ): Promise<SubscriptionDetails> {
   const org = await prisma.organization.findUnique({
     where: { id: orgId },
@@ -60,7 +60,7 @@ export async function getSubscriptionDetails(
 
 export async function createCheckoutUrl(
   orgId: string,
-  targetPlan: SubscriptionPlan
+  targetPlan: SubscriptionPlan,
 ): Promise<string> {
   const planFeatures = PLAN_FEATURES[targetPlan];
 
@@ -68,7 +68,13 @@ export async function createCheckoutUrl(
     throw new Error(`Plan ${targetPlan} does not have a Polar product ID`);
   }
 
-  const customerId = await ensureCustomer({ orgId });
+  const polar = getPolarClient();
+
+  if (!polar) {
+    throw new Error("Polar client is not initialized");
+  }
+
+  const customerId = await ensureCustomer({ orgId, polar });
 
   // Build checkout URL using the existing checkout endpoint
   // The Checkout helper from @polar-sh/nextjs expects products and customerId as query params
@@ -92,6 +98,12 @@ export async function getCustomerPortalUrl(orgId: string): Promise<string> {
 
   if (!org.polarCustomerId) {
     throw new Error("Organization does not have a Polar customer ID");
+  }
+
+  const polar = getPolarClient();
+
+  if (!polar) {
+    throw new Error("Polar client is not initialized");
   }
 
   const session = await polar.customerSessions.create({

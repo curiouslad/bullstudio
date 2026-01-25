@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { polar } from "@bullstudio/billing";
+import { getPolarClient } from "@bullstudio/billing";
 import { prisma } from "@bullstudio/prisma";
 
 export async function GET(request: NextRequest) {
@@ -9,24 +9,33 @@ export async function GET(request: NextRequest) {
   if (!checkoutId) {
     return NextResponse.json(
       { error: "Checkout ID is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   try {
+    const polar = getPolarClient();
+
+    if (!polar) {
+      return NextResponse.json(
+        { error: "Polar client is not initialized" },
+        { status: 500 },
+      );
+    }
+
     const checkout = await polar.checkouts.get({ id: checkoutId });
 
     if (!checkout) {
       return NextResponse.json(
         { error: "Checkout not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     if (checkout.status !== "succeeded") {
       return NextResponse.json(
         { error: "Checkout was not successful" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -35,7 +44,7 @@ export async function GET(request: NextRequest) {
     if (!customerId) {
       return NextResponse.json(
         { error: "No customer associated with checkout" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -53,7 +62,7 @@ export async function GET(request: NextRequest) {
     console.error("[verify-checkout] Error:", error);
     return NextResponse.json(
       { error: "Failed to verify checkout" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

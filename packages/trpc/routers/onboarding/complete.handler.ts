@@ -5,7 +5,7 @@ import {
 } from "@bullstudio/prisma";
 import { AuthedTRPCContext } from "../../types";
 import { CompleteOnboardingInput } from "./complete.schema";
-import { createCustomer, ensureCustomer } from "@bullstudio/billing";
+import { createCustomer, getPolarClient } from "@bullstudio/billing";
 
 type CompleteOnboardingHandlerProps = {
   ctx: AuthedTRPCContext;
@@ -97,17 +97,22 @@ export async function completeOnboardingHandler({
       },
     });
 
-    const customerId = await createCustomer({
-      userId: user.id,
-      email: user.email,
-      name: organizationName,
-      orgId: organization.id,
-    });
+    const polar = getPolarClient();
 
-    await tx.organization.update({
-      where: { id: organization.id },
-      data: { polarCustomerId: customerId },
-    });
+    if (polar) {
+      const customerId = await createCustomer({
+        polar,
+        userId: user.id,
+        email: user.email,
+        name: organizationName,
+        orgId: organization.id,
+      });
+
+      await tx.organization.update({
+        where: { id: organization.id },
+        data: { polarCustomerId: customerId },
+      });
+    }
 
     const workspace = await tx.workspace.create({
       data: {
