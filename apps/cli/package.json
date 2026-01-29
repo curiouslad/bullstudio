@@ -1,11 +1,11 @@
 {
-  "name": "bullstudio-cli",
+  "name": "bullstudio",
   "version": "0.0.1",
   "description": "A lightweight queue management dashboard for BullMQ",
   "private": false,
   "type": "module",
   "bin": {
-    "bullstudio-cli": "./dist/bin/cli.js"
+    "bullstudio": "./dist/bin/cli.js"
   },
   "scripts": {
     "dev": "vite dev",
@@ -36,9 +36,12 @@
     "@trpc/client": "^11.4.3",
     "@trpc/server": "^11.4.3",
     "@trpc/tanstack-react-query": "^11.4.3",
+    "@types/dagre": "^0.7.53",
     "@xyflow/react": "^12.10.0",
+    "bullmq": "^5.34.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dagre": "^0.8.5",
     "lucide-react": "^0.544.0",
     "open": "^10.1.0",
     "react": "19.2.3",

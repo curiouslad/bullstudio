@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JobsIndexRouteImport } from './routes/jobs/index'
+import { Route as FlowsIndexRouteImport } from './routes/flows/index'
 import { Route as JobsJobIdRouteImport } from './routes/jobs/$jobId'
+import { Route as FlowsFlowIdRouteImport } from './routes/flows/$flowId'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -24,9 +26,19 @@ const JobsIndexRoute = JobsIndexRouteImport.update({
   path: '/jobs/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FlowsIndexRoute = FlowsIndexRouteImport.update({
+  id: '/flows/',
+  path: '/flows/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JobsJobIdRoute = JobsJobIdRouteImport.update({
   id: '/jobs/$jobId',
   path: '/jobs/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlowsFlowIdRoute = FlowsFlowIdRouteImport.update({
+  id: '/flows/$flowId',
+  path: '/flows/$flowId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
@@ -37,34 +49,61 @@ const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/flows/$flowId': typeof FlowsFlowIdRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
+  '/flows/': typeof FlowsIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/flows/$flowId': typeof FlowsFlowIdRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
+  '/flows': typeof FlowsIndexRoute
   '/jobs': typeof JobsIndexRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/flows/$flowId': typeof FlowsFlowIdRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
+  '/flows/': typeof FlowsIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/jobs/$jobId' | '/jobs/' | '/api/trpc/$'
+  fullPaths:
+    | '/'
+    | '/flows/$flowId'
+    | '/jobs/$jobId'
+    | '/flows/'
+    | '/jobs/'
+    | '/api/trpc/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/jobs/$jobId' | '/jobs' | '/api/trpc/$'
-  id: '__root__' | '/' | '/jobs/$jobId' | '/jobs/' | '/api/trpc/$'
+  to:
+    | '/'
+    | '/flows/$flowId'
+    | '/jobs/$jobId'
+    | '/flows'
+    | '/jobs'
+    | '/api/trpc/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/flows/$flowId'
+    | '/jobs/$jobId'
+    | '/flows/'
+    | '/jobs/'
+    | '/api/trpc/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FlowsFlowIdRoute: typeof FlowsFlowIdRoute
   JobsJobIdRoute: typeof JobsJobIdRoute
+  FlowsIndexRoute: typeof FlowsIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
@@ -85,11 +124,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/flows/': {
+      id: '/flows/'
+      path: '/flows'
+      fullPath: '/flows/'
+      preLoaderRoute: typeof FlowsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jobs/$jobId': {
       id: '/jobs/$jobId'
       path: '/jobs/$jobId'
       fullPath: '/jobs/$jobId'
       preLoaderRoute: typeof JobsJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flows/$flowId': {
+      id: '/flows/$flowId'
+      path: '/flows/$flowId'
+      fullPath: '/flows/$flowId'
+      preLoaderRoute: typeof FlowsFlowIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/trpc/$': {
@@ -104,7 +157,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FlowsFlowIdRoute: FlowsFlowIdRoute,
   JobsJobIdRoute: JobsJobIdRoute,
+  FlowsIndexRoute: FlowsIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
 }

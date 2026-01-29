@@ -31,5 +31,9 @@
   "packageManager": "pnpm@10.4.1",
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@types/dagre": "^0.7.53",
+    "dagre": "^0.8.5"
   }
 }

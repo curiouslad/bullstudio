@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, ListTodo, Github, Database } from "lucide-react";
+import { LayoutDashboard, ListTodo, Github, Database, Workflow } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -43,6 +43,11 @@ export function AppSidebar() {
       title: "Jobs",
       href: "/jobs",
       icon: ListTodo,
+    },
+    {
+      title: "Flows",
+      href: "/flows",
+      icon: Workflow,
     },
   ];
 
