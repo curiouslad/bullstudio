@@ -16,6 +16,7 @@ import {
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTRPC } from "@/integrations/trpc/react";
 import { useQuery } from "@tanstack/react-query";
+import { VERSION } from "@/const";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -109,7 +110,7 @@ export function AppSidebar() {
                 <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                   <span className="text-zinc-400 font-medium">Redis</span>
                   <span className="text-zinc-500 font-mono text-[11px]">
-                    {connectionInfo?.displayUrl || "connecting..."}
+                    {connectionInfo?.displayUrl || "connecting..."} 
                   </span>
                 </div>
               </div>
@@ -122,7 +123,7 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-4">
         <div className="flex items-center justify-between text-xs text-zinc-500 group-data-[collapsible=icon]:justify-center">
           <span className="group-data-[collapsible=icon]:hidden">
-            v0.0.1
+            {VERSION}
           </span>
           <a
             href="https://github.com/emirce/bullstudio"
