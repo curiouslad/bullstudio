@@ -1,117 +1,200 @@
-<div align="center">
-  <img src="assets/logo.svg" height="100px" />
-</div>
+<p align="center">
+  <img src="assets/logo.svg" alt="bullstudio" width="120" />
+</p>
+
+<h1 align="center">bullstudio</h1>
 
 <p align="center">
-	<h1 align="center"><b>bullstudio</b></h1>
+  A lightweight, beautiful queue management dashboard for <a href="https://docs.bullmq.io/">BullMQ</a>.<br/>
+  Monitor your queues, inspect jobs, visualize flows, and manage your Redis-backed job infrastructure.
+</p>
+
 <p align="center">
-    Modern queue management for BullMQ.
-    <br />
-    <br />
-    <a href="https://bullstudio.dev">Website</a>
-    <a href="https://docs.bullstudio.dev">Docs</a>
-    <a href="https://discord.gg/RWhrk4aXze">Discord</a>
-  </p>
+  <img src="https://img.shields.io/badge/BullMQ-5.x-orange" alt="BullMQ" />
+  <img src="https://img.shields.io/badge/React-19-blue" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5.x-blue" alt="TypeScript" />
 </p>
 
 ---
 
-## What is bullstudio?
-
-bullstudio is a cloud-hosted dashboard that gives you real-time visibility into your Bull and BullMQ job queues. It's built for backend developers and DevOps teams who need to monitor queue health, debug failed jobs, and get alerted before backlogs become outages. Unlike basic Redis GUIs or self-hosted alternatives, bullstudio offers intelligent alerting, multi-environment support, and a polished UI designed for production workflows.
 
 <div align="center">
-	<img width="80%" src="https://github.com/user-attachments/assets/63502c4f-06ac-4581-84b4-7b32746d29e2" />
+<img width="80%" src="https://github.com/user-attachments/assets/b5eea348-5919-40ff-ad55-3a0387dbec47" />
 </div>
+
+
+## Quick Start
+
+```bash
+npx bullstudio -r <redis_url>
+```
+
+That's it! The dashboard opens automatically at [http://localhost:4000](http://localhost:4000). No code integration needed.
 
 ---
 
-## Tech Stack
+## Installation
 
-| Layer     | Technology                      |
-| --------- | ------------------------------- |
-| Framework | Next.js 16 (App Router)         |
-| Language  | TypeScript                      |
-| Styling   | Tailwind CSS + shadcn/ui        |
-| API       | tRPC                            |
-| Database  | PostgreSQL + Prisma             |
-| Auth      | Auth.js (Google, GitHub, Email) |
-| Payments  | Polar                           |
-| Email     | Resend                          |
-| Bg-Jobs   | BullMQ                          |
-| Monorepo  | Turborepo + pnpm                |
+### Run directly with npx (recommended)
+
+```bash
+npx bullstudio
+```
+
+### Or install globally
+
+```bash
+npm install -g bullstudio
+bullstudio
+```
+
+---
+
+## Usage
+
+```bash
+bullstudio [options]
+```
+
+### Options
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--redis <url>` | `-r` | Redis connection URL | `redis://localhost:6379` |
+| `--port <port>` | `-p` | Port to run the dashboard on | `4000` |
+| `--no-open` | | Don't open browser automatically | Opens browser |
+| `--help` | `-h` | Show help message | |
+
+---
+
+## Examples
+
+### Connect to local Redis
+
+```bash
+bullstudio
+```
+
+### Connect to a remote Redis server
+
+```bash
+bullstudio -r redis://myhost.com:6379
+```
+
+### Connect with authentication
+
+```bash
+bullstudio -r redis://:yourpassword@myhost.com:6379
+```
+
+### Use a custom port
+
+```bash
+bullstudio -p 5000
+```
+
+### Connect to Redis with username and password
+
+```bash
+bullstudio -r redis://username:password@myhost.com:6379
+```
+
+### Run without opening browser
+
+```bash
+bullstudio --no-open
+```
+
+### Combine options
+
+```bash
+bullstudio -r redis://:secret@production.redis.io:6379 -p 8080 --no-open
+```
 
 ---
 
 ## Features
 
-- **Real-time queue monitoring** - View job counts, throughput, and worker status across all your queues
-- **Job management** - Inspect, retry, or delete jobs with filtering by status, name, and timestamp
-- **Intelligent alerts** - Get notified on failure spikes, growing backlogs, slow processing times, or missing workers
-- **Multi-connection support** - Monitor multiple Redis instances from a single dashboard
-- **Team collaboration** - Organizations and workspaces with role-based access control
-- **Encrypted credentials** - All Redis connection details stored with AES encryption
+### Overview Dashboard
+Get a bird's-eye view of your queue health with real-time metrics, throughput charts, and failure tracking.
+
+### Jobs Browser
+- Browse all jobs across queues
+- Filter by status (waiting, active, completed, failed, delayed)
+- Search jobs by name, ID, or data
+- Retry failed jobs with one click
+- View detailed job data, return values, and stack traces
+
+### Flows Visualization
+- Visualize parent-child job relationships as interactive graphs
+- See the live state of each job in the flow
+- Click nodes to navigate to job details
+- Auto-refresh while flows are active
 
 ---
 
-## Quickstart
+## Requirements
 
-### Prerequisites
+- **Node.js** 18 or higher
+- **Redis** server running (local or remote)
+- **BullMQ** queues in your Redis instance
 
-- Node.js 20+
-- pnpm 10+
-- PostgreSQL database
-- Redis instance to monitor
+---
 
-### 1. Clone and install
+## Environment Variables
 
-```bash
-git clone https://github.com/emirce/bullstudio.git
-cd bullstudio
-pnpm install
-```
-
-### 2. Configure environment
+You can also configure bullstudio using environment variables:
 
 ```bash
-cp .env.example apps/web/.env
-cp .env.example apps/workers/.env
+export REDIS_URL=redis://localhost:6379
+export PORT=4000
+bullstudio
 ```
 
-Fill in the following env vars for the web app (apps/web/.env)
+Command-line options take precedence over environment variables.
 
-```env
-DATABASE_URL=...
-ENCRYPTION_KEY=...
-AUTH_URL=...
-AUTH_SECRET=....
-```
+---
 
-And the following ones for the workers app (apps/workers.env)
+## Troubleshooting
 
-```env
-DATABASE_URL=...
-RESEND_API_KEY=...
-DATABASE_URL=...
-```
+### "Connection refused" error
 
-### 3. Setup database
+Make sure Redis is running:
 
 ```bash
-pnpm prisma:generate
-pnpm prisma:migrate-dev
+# Check if Redis is running
+redis-cli ping
+
+# Start Redis (macOS with Homebrew)
+brew services start redis
+
+# Start Redis (Docker)
+docker run -d -p 6379:6379 redis
 ```
 
-### 4. Run development workers and web
+### No queues showing up
+
+bullstudio discovers queues by scanning for BullMQ metadata keys in Redis. Make sure:
+1. Your application has created at least one queue
+2. You're connecting to the correct Redis instance
+3. If using a prefix other than `bull`, your queues use the default prefix
+
+### Port already in use
+
+Use a different port:
 
 ```bash
-pnpm dev -F web -F workers
+bullstudio -p 5000
 ```
-
-Open [http://localhost:3000](http://localhost:3000) and create your first workspace.
 
 ---
 
 ## License
 
-bullstudio is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE). You are free to use, modify, and distribute this software, but any modifications or derivative works must also be open-sourced under the same license.
+MIT
+
+---
+
+<p align="center">
+  Made with love for the BullMQ community
+</p>
