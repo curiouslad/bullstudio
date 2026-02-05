@@ -28,6 +28,7 @@ RUN adduser --system --uid 1001 bullstudio
 USER bullstudio
 
 ENV NODE_ENV=production
+ENV HOST=0.0.0.0
 
 COPY --from=builder --chown=bullstudio:nodejs /app/apps/cli/dist/ ./apps/cli/dist/
 
