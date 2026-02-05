@@ -1,4 +1,4 @@
-import { Queue, Job as BullJob } from "bullmq";
+import { Queue, Job as BullJob, JobType } from "bullmq";
 import Redis from "ioredis";
 import type {
   QueueService,
@@ -203,6 +203,113 @@ export class BullMqProvider implements QueueService {
     return mappedJobs;
   }
 
+  // https://github.com/taskforcesh/bullmq/blob/master/src/classes/queue-getters.ts#L456
+  private sanitizeJobTypes(types: JobType[] | JobType | undefined): JobType[] {
+    const currentTypes = typeof types === "string" ? [types] : types;
+
+    if (Array.isArray(currentTypes) && currentTypes.length > 0) {
+      const sanitizedTypes = [...currentTypes];
+
+      if (sanitizedTypes.indexOf("waiting") !== -1) {
+        sanitizedTypes.push("paused");
+      }
+
+      return [...new Set(sanitizedTypes)];
+    }
+
+    return [
+      "active",
+      "completed",
+      "delayed",
+      "failed",
+      "paused",
+      "prioritized",
+      "waiting",
+      "waiting-children",
+    ];
+  }
+
+  private async getJobMetaFromKey(
+    queue: Queue,
+    jobId: string,
+    jobKey: string,
+  ): Promise<JobSummary | null> {
+    const client = await queue.client;
+    const [
+      name,
+      timestamp,
+      progress,
+      attemptsMade,
+      processedOn,
+      finishedOn,
+      failedReason,
+      delay,
+      priority,
+      parent,
+    ] = await client.hmget(
+      jobKey,
+      "name",
+      "timestamp",
+      "progress",
+      "attemptsMade",
+      "processedOn",
+      "finishedOn",
+      "failedReason",
+      "delay",
+      "priority",
+      "parent",
+    );
+
+    const jobStatus = await queue.getJobState(jobId);
+
+    // Check if job has parent
+    let parentId: string | undefined;
+    if (parent) {
+      const parentData = JSON.parse(parent);
+      parentId = parentData.id;
+    }
+
+    return {
+      id: jobId,
+      name: name || "",
+      queueName: queue.name,
+      status: jobStatus as JobStatus,
+      timestamp: timestamp ? parseInt(timestamp, 10) : 0,
+      progress: progress ? this.normalizeProgress(progress) : 0,
+      attemptsMade: attemptsMade ? parseInt(attemptsMade, 10) : 0,
+      processedOn: processedOn ? parseInt(processedOn, 10) : undefined,
+      finishedOn: finishedOn ? parseInt(finishedOn, 10) : undefined,
+      failedReason: failedReason || undefined,
+      delay: delay ? parseInt(delay, 10) : undefined,
+      priority: priority ? parseInt(priority, 10) : undefined,
+      parentId: parentId,
+    };
+  }
+
+  // Works similar to queue.getJobs but skips fetching the full job objects and instead retrieves only the metadata needed for summaries directly from Redis hashes. This is much faster and lighter when we only need summary info for many jobs.
+  private async getJobsTrimmed(
+    queue: Queue,
+    types?: JobType[],
+    start: number = 0,
+    end: number = -1,
+    asc: boolean = false,
+  ) {
+    const sanitizedTypes = this.sanitizeJobTypes(types);
+    const jobIds = await queue.getRanges(sanitizedTypes, start, end, asc);
+
+    const promises = jobIds.map(async (id) => {
+      const jobKey = queue.toKey(id);
+      const meta = await this.getJobMetaFromKey(queue, id, jobKey);
+      return meta;
+    });
+
+    const jobs = await Promise.all(promises);
+
+    const filtered = jobs.filter((job): job is JobSummary => job !== null);
+
+    return filtered;
+  }
+
   async getJobsSummary(
     queueName: string,
     options?: JobQueryOptions,
@@ -211,12 +318,15 @@ export class BullMqProvider implements QueueService {
     const { filter, sort, limit = 100, offset = 0 } = options ?? {};
 
     const statuses = this.resolveStatuses(filter?.status);
-    const jobs = await queue.getJobs(statuses, offset, offset + limit - 1);
 
-    let mappedJobs = jobs
-      .filter((job): job is BullJob => job !== undefined)
-      .map((job) => this.mapJobSummary(job, this.mapJobState(job), queueName));
+    const jobs = await this.getJobsTrimmed(
+      queue,
+      statuses,
+      offset,
+      offset + limit - 1,
+    );
 
+    let mappedJobs = jobs;
     if (filter?.name) {
       mappedJobs = mappedJobs.filter((job) => job.name === filter.name);
     }
@@ -363,36 +473,6 @@ export class BullMqProvider implements QueueService {
       priority: job.opts?.priority,
       parentId: job.parentKey?.split(":").pop(),
       repeatJobKey: job.repeatJobKey,
-    };
-  }
-
-  private mapJobSummary(
-    job: BullJob,
-    state: string,
-    queueName: string,
-  ): JobSummary {
-    const dataStr = job.data ? JSON.stringify(job.data) : "";
-    return {
-      id: job.id ?? "",
-      name: job.name,
-      queueName,
-      status: state as JobStatus,
-      progress: this.normalizeProgress(job.progress),
-      attemptsMade: job.attemptsMade,
-      attemptsLimit: job.opts?.attempts ?? 1,
-      timestamp: job.timestamp,
-      processedOn: job.processedOn,
-      finishedOn: job.finishedOn,
-      delay: job.opts?.delay,
-      priority: job.opts?.priority,
-      parentId: job.parentKey?.split(":").pop(),
-      repeatJobKey: job.repeatJobKey,
-      hasData: !!job.data,
-      dataSize: dataStr.length,
-      hasReturnValue: job.returnvalue !== undefined && job.returnvalue !== null,
-      hasStacktrace: Array.isArray(job.stacktrace) && job.stacktrace.length > 0,
-      hasFailedReason: !!job.failedReason,
-      failedReason: job.failedReason,
     };
   }
 

@@ -57,7 +57,10 @@ export interface QueueService {
 
   // Job operations
   getJobs(queueName: string, options?: JobQueryOptions): Promise<Job[]>;
-  getJobsSummary(queueName: string, options?: JobQueryOptions): Promise<JobSummary[]>;
+  getJobsSummary(
+    queueName: string,
+    options?: JobQueryOptions,
+  ): Promise<JobSummary[]>;
   getJob(queueName: string, jobId: string): Promise<Job | null>;
   retryJob(queueName: string, jobId: string): Promise<void>;
   removeJob(queueName: string, jobId: string): Promise<void>;

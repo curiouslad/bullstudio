@@ -59,7 +59,6 @@ export interface JobSummary {
   status: JobStatus;
   progress: number | object;
   attemptsMade: number;
-  attemptsLimit: number;
   timestamp: number;
   processedOn?: number;
   finishedOn?: number;
@@ -67,12 +66,6 @@ export interface JobSummary {
   priority?: number;
   parentId?: string;
   repeatJobKey?: string;
-  // Size hints for UI indicators
-  hasData: boolean;
-  dataSize?: number;
-  hasReturnValue: boolean;
-  hasStacktrace: boolean;
-  hasFailedReason: boolean;
   // Included for failed job tracking in overview metrics
   failedReason?: string;
 }

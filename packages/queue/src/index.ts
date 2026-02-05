@@ -25,14 +25,13 @@ export { BullMqProvider } from "./providers";
 export * from "./errors";
 
 // Singleton instance factory
-import type { PrismaClient } from "@bullstudio/prisma";
 import { ConnectionManager } from "./connection-manager";
 
 let instance: ConnectionManager | null = null;
 
-export function getConnectionManager(prisma: PrismaClient): ConnectionManager {
+export function getConnectionManager(): ConnectionManager {
   if (!instance) {
-    instance = new ConnectionManager({ prisma });
+    instance = new ConnectionManager({});
   }
   return instance;
 }
