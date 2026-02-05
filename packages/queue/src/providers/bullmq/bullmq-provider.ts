@@ -1,4 +1,4 @@
-import { Queue, Job as BullJob } from "bullmq";
+import { Queue, Job as BullJob, JobType } from "bullmq";
 import Redis from "ioredis";
 import type {
   QueueService,
@@ -8,6 +8,7 @@ import type {
 } from "../../types";
 import type {
   Job,
+  JobSummary,
   Queue as IQueue,
   JobCounts,
   JobQueryOptions,
@@ -106,7 +107,7 @@ export class BullMqProvider implements QueueService {
 
   async disconnect(): Promise<void> {
     const closePromises = Array.from(this.queues.values()).map((queue) =>
-      queue.close()
+      queue.close(),
     );
     await Promise.all(closePromises);
     this.queues.clear();
@@ -126,7 +127,7 @@ export class BullMqProvider implements QueueService {
   async getQueues(): Promise<IQueue[]> {
     const queueNames = await this.discoverQueues();
     const queues = await Promise.all(
-      queueNames.map((name) => this.getQueue(name))
+      queueNames.map((name) => this.getQueue(name)),
     );
     return queues.filter((q): q is IQueue => q !== null);
   }
@@ -155,7 +156,7 @@ export class BullMqProvider implements QueueService {
       "delayed",
       "paused",
       "prioritized",
-      "waiting-children"
+      "waiting-children",
     );
 
     return {
@@ -187,9 +188,9 @@ export class BullMqProvider implements QueueService {
     const statuses = this.resolveStatuses(filter?.status);
     const jobs = await queue.getJobs(statuses, offset, offset + limit - 1);
 
-    let mappedJobs = await Promise.all(jobs
+    let mappedJobs = jobs
       .filter((job): job is BullJob => job !== undefined)
-      .map(async (job) => this.mapJob(job, await job.getState(), queueName)));
+      .map((job) => this.mapJob(job, this.mapJobState(job), queueName));
 
     if (filter?.name) {
       mappedJobs = mappedJobs.filter((job) => job.name === filter.name);
@@ -197,6 +198,141 @@ export class BullMqProvider implements QueueService {
 
     if (sort) {
       mappedJobs = this.sortJobs(mappedJobs, sort.field, sort.order);
+    }
+
+    return mappedJobs;
+  }
+
+  // https://github.com/taskforcesh/bullmq/blob/master/src/classes/queue-getters.ts#L456
+  private sanitizeJobTypes(types: JobType[] | JobType | undefined): JobType[] {
+    const currentTypes = typeof types === "string" ? [types] : types;
+
+    if (Array.isArray(currentTypes) && currentTypes.length > 0) {
+      const sanitizedTypes = [...currentTypes];
+
+      if (sanitizedTypes.indexOf("waiting") !== -1) {
+        sanitizedTypes.push("paused");
+      }
+
+      return [...new Set(sanitizedTypes)];
+    }
+
+    return [
+      "active",
+      "completed",
+      "delayed",
+      "failed",
+      "paused",
+      "prioritized",
+      "waiting",
+      "waiting-children",
+    ];
+  }
+
+  private async getJobMetaFromKey(
+    queue: Queue,
+    jobId: string,
+    jobKey: string,
+  ): Promise<JobSummary | null> {
+    const client = await queue.client;
+    const [
+      name,
+      timestamp,
+      progress,
+      attemptsMade,
+      processedOn,
+      finishedOn,
+      failedReason,
+      delay,
+      priority,
+      parent,
+    ] = await client.hmget(
+      jobKey,
+      "name",
+      "timestamp",
+      "progress",
+      "attemptsMade",
+      "processedOn",
+      "finishedOn",
+      "failedReason",
+      "delay",
+      "priority",
+      "parent",
+    );
+
+    const jobStatus = await queue.getJobState(jobId);
+
+    // Check if job has parent
+    let parentId: string | undefined;
+    if (parent) {
+      const parentData = JSON.parse(parent);
+      parentId = parentData.id;
+    }
+
+    return {
+      id: jobId,
+      name: name || "",
+      queueName: queue.name,
+      status: jobStatus as JobStatus,
+      timestamp: timestamp ? parseInt(timestamp, 10) : 0,
+      progress: progress ? this.normalizeProgress(progress) : 0,
+      attemptsMade: attemptsMade ? parseInt(attemptsMade, 10) : 0,
+      processedOn: processedOn ? parseInt(processedOn, 10) : undefined,
+      finishedOn: finishedOn ? parseInt(finishedOn, 10) : undefined,
+      failedReason: failedReason || undefined,
+      delay: delay ? parseInt(delay, 10) : undefined,
+      priority: priority ? parseInt(priority, 10) : undefined,
+      parentId: parentId,
+    };
+  }
+
+  // Works similar to queue.getJobs but skips fetching the full job objects and instead retrieves only the metadata needed for summaries directly from Redis hashes. This is much faster and lighter when we only need summary info for many jobs.
+  private async getJobsTrimmed(
+    queue: Queue,
+    types?: JobType[],
+    start: number = 0,
+    end: number = -1,
+    asc: boolean = false,
+  ) {
+    const sanitizedTypes = this.sanitizeJobTypes(types);
+    const jobIds = await queue.getRanges(sanitizedTypes, start, end, asc);
+
+    const promises = jobIds.map(async (id) => {
+      const jobKey = queue.toKey(id);
+      const meta = await this.getJobMetaFromKey(queue, id, jobKey);
+      return meta;
+    });
+
+    const jobs = await Promise.all(promises);
+
+    const filtered = jobs.filter((job): job is JobSummary => job !== null);
+
+    return filtered;
+  }
+
+  async getJobsSummary(
+    queueName: string,
+    options?: JobQueryOptions,
+  ): Promise<JobSummary[]> {
+    const queue = this.getOrCreateQueue(queueName);
+    const { filter, sort, limit = 100, offset = 0 } = options ?? {};
+
+    const statuses = this.resolveStatuses(filter?.status);
+
+    const jobs = await this.getJobsTrimmed(
+      queue,
+      statuses,
+      offset,
+      offset + limit - 1,
+    );
+
+    let mappedJobs = jobs;
+    if (filter?.name) {
+      mappedJobs = mappedJobs.filter((job) => job.name === filter.name);
+    }
+
+    if (sort) {
+      mappedJobs = this.sortJobSummaries(mappedJobs, sort.field, sort.order);
     }
 
     return mappedJobs;
@@ -280,7 +416,7 @@ export class BullMqProvider implements QueueService {
   }
 
   private resolveStatuses(
-    status?: JobStatus | JobStatus[]
+    status?: JobStatus | JobStatus[],
   ): (
     | "waiting"
     | "active"
@@ -357,7 +493,7 @@ export class BullMqProvider implements QueueService {
   }
 
   private normalizeProgress(
-    progress: number | string | object | boolean
+    progress: number | string | object | boolean,
   ): number | object {
     if (typeof progress === "boolean") {
       return progress ? 100 : 0;
@@ -372,8 +508,29 @@ export class BullMqProvider implements QueueService {
   private sortJobs(
     jobs: Job[],
     field: "timestamp" | "processedOn" | "finishedOn" | "progress",
-    order: "asc" | "desc"
+    order: "asc" | "desc",
   ): Job[] {
+    return [...jobs].sort((a, b) => {
+      let aValue: number;
+      let bValue: number;
+
+      if (field === "progress") {
+        aValue = typeof a.progress === "number" ? a.progress : 0;
+        bValue = typeof b.progress === "number" ? b.progress : 0;
+      } else {
+        aValue = a[field] ?? 0;
+        bValue = b[field] ?? 0;
+      }
+
+      return order === "asc" ? aValue - bValue : bValue - aValue;
+    });
+  }
+
+  private sortJobSummaries(
+    jobs: JobSummary[],
+    field: "timestamp" | "processedOn" | "finishedOn" | "progress",
+    order: "asc" | "desc",
+  ): JobSummary[] {
     return [...jobs].sort((a, b) => {
       let aValue: number;
       let bValue: number;

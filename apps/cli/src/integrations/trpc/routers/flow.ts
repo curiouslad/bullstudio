@@ -31,7 +31,7 @@ async function countFlowStats(tree: JobNode): Promise<{
   let failed = 0;
 
   const job = tree.job;
-  const state= await job.getState();
+  const state = await job.getState();
   if (state === "completed") {
     completed = 1;
   } else if (state === "failed") {
@@ -77,7 +77,9 @@ async function convertFlowTree(tree: JobNode): Promise<FlowNode> {
 
 export const flowRouter = {
   list: publicProcedure
-    .input(z.object({ limit: z.number().min(1).max(100).default(50) }).optional())
+    .input(
+      z.object({ limit: z.number().min(1).max(100).default(50) }).optional(),
+    )
     .query(async ({ input }): Promise<FlowSummary[]> => {
       const limit = input?.limit ?? 50;
       const provider = await getQueueProvider();
@@ -90,11 +92,9 @@ export const flowRouter = {
       for (const queue of queues) {
         if (flows.length >= limit) break;
 
-        const jobs = await provider.getJobs(queue.name, { limit: 500 });
+        const jobs = await provider.getJobsSummary(queue.name, { limit: 500 });
 
-        const potentialRoots = jobs.filter(
-          (job) => !job.parentId
-        );
+        const potentialRoots = jobs.filter((job) => !job.parentId);
 
         for (const job of potentialRoots) {
           if (flows.length >= limit) break;
@@ -194,7 +194,6 @@ export const flowRouter = {
             message: `Flow ${input.flowId} not found in queue ${input.queueName}`,
           });
         }
-
 
         const root = await convertFlowTree(flowTree);
         const stats = await countFlowStats(flowTree);
