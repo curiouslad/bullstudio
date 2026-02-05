@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTRPC } from "@/integrations/trpc/react";
 import { useQuery } from "@tanstack/react-query";
@@ -39,7 +39,7 @@ function OverviewPage() {
   const [timeRange, setTimeRange] = useState<number>(24);
 
   const { data: queues, isLoading: loadingQueues } = useQuery(
-    trpc.queues.list.queryOptions()
+    trpc.queues.list.queryOptions(),
   );
 
   const {
@@ -51,7 +51,7 @@ function OverviewPage() {
     trpc.overview.metrics.queryOptions({
       timeRangeHours: timeRange,
       queueName: queueName || undefined,
-    })
+    }),
   );
 
   return (
