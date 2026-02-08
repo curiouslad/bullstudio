@@ -1,10 +1,53 @@
-import { createServer } from "node:http";
+import {
+  createServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from "node:http";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pathToFileURL } from "node:url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
+
+// Authentication configuration
+const AUTH_USERNAME = "bullstudio";
+const password = process.env.BULLSTUDIO_PASSWORD;
+
+function isHealthCheck(pathname: string): boolean {
+  return pathname === "/health" || pathname === "/healthz";
+}
+
+function checkAuth(req: IncomingMessage, res: ServerResponse): boolean {
+  // Skip auth if no password set or health check
+  if (!password || isHealthCheck(req.url || "")) {
+    return true;
+  }
+
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith("Basic ")) {
+    res.writeHead(401, {
+      "WWW-Authenticate": 'Basic realm="bullstudio"',
+      "Content-Type": "text/plain",
+    });
+    res.end("Authentication required");
+    return false;
+  }
+
+  const credentials = Buffer.from(auth.slice(6), "base64").toString();
+  const [username, pass] = credentials.split(":");
+
+  if (username !== AUTH_USERNAME || pass !== password) {
+    res.writeHead(401, {
+      "WWW-Authenticate": 'Basic realm="bullstudio"',
+      "Content-Type": "text/plain",
+    });
+    res.end("Invalid credentials");
+    return false;
+  }
+
+  return true;
+}
 // After bundling, this file is at dist/server/production.js
 // So __dirname is dist/server, and we need dist/client and dist/server/server.js
 const clientDir = join(__dirname, "..", "client");
@@ -42,12 +85,28 @@ async function getServerModule(): Promise<ServerModule> {
     const module = await import(pathToFileURL(serverFile).href);
     serverModule = module.default || module;
   }
-  return serverModule;
+  return serverModule!;
 }
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${host}:${port}`);
   const pathname = url.pathname;
+
+  // Check authentication first
+  if (!checkAuth(req, res)) return;
+
+  // Handle health check endpoint
+  if (isHealthCheck(pathname)) {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        redis: process.env.REDIS_URL ? "configured" : "not configured",
+      }),
+    );
+    return;
+  }
 
   // Try to serve static files first
   // Handle assets, favicon, logo, and fonts

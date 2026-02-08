@@ -22,6 +22,10 @@ const { values, positionals } = parseArgs({
       default: "4000",
       description: "Port to run the server on",
     },
+    password: {
+      type: "string",
+      description: "Password for HTTP Basic Auth (username: bullstudio)",
+    },
     help: {
       type: "boolean",
       short: "h",
@@ -50,6 +54,7 @@ Usage:
 Options:
   -r, --redis <url>    Redis connection URL (default: redis://localhost:6379)
   -p, --port <port>    Port to run the server on (default: 4000)
+  --password <pass>    Password for HTTP Basic Auth (username: bullstudio)
   --no-open            Do not open browser automatically
   --dev                Run in development mode (requires source files)
   -h, --help           Show this help message
@@ -59,6 +64,7 @@ Examples:
   bullstudio-cli -r redis://localhost:6379
   bullstudio-cli -r redis://:password@myhost.com:6379
   bullstudio-cli -p 5000 -r redis://localhost:6379
+  bullstudio-cli --password secret123
 `);
   process.exit(0);
 }
@@ -67,6 +73,7 @@ const redisUrl = values.redis || positionals[0] || "redis://localhost:6379";
 const port = values.port || "4000";
 const shouldOpen = !values["no-open"];
 const isDev = values.dev;
+const password = values.password;
 
 // Validate Redis URL
 try {
@@ -74,7 +81,7 @@ try {
 } catch {
   console.error(`Invalid Redis URL: ${redisUrl}`);
   console.error(
-    "Please provide a valid Redis URL (e.g., redis://localhost:6379)"
+    "Please provide a valid Redis URL (e.g., redis://localhost:6379)",
   );
   process.exit(1);
 }
@@ -90,6 +97,7 @@ console.log(`
 Redis: ${redisUrl}
 Port:  ${port}
 Mode:  ${isDev ? "development" : "production"}
+Auth:  ${password ? "enabled (username: bullstudio)" : "disabled"}
 `);
 
 async function openBrowser(url: string) {
@@ -141,6 +149,7 @@ if (isDev) {
       REDIS_URL: redisUrl,
       PORT: port,
       HOST: "localhost",
+      BULLSTUDIO_PASSWORD: password,
     },
     stdio: "pipe",
   });
