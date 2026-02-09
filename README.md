@@ -51,12 +51,6 @@ npm install -g bullstudio
 bullstudio
 ```
 
-### Run with Docker
-
-```bash
-docker run -d -p 4000:4000 -e REDIS_URL=redis://host.docker.internal:6379 emirce/bullstudio
-```
-
 ---
 
 ## Docker
@@ -130,6 +124,7 @@ docker compose up -d
 | --------------------- | ----------------------------------------- | ------------------------ |
 | `REDIS_URL`           | Redis connection URL                      | `redis://localhost:6379` |
 | `PORT`                | Port to run the dashboard on              | `4000`                   |
+| `BULLSTUDIO_USERNAME` | Password for HTTP Basic Auth (production) | `bullstudio`             |
 | `BULLSTUDIO_PASSWORD` | Password for HTTP Basic Auth (production) | (none)                   |
 
 ### Available Tags
@@ -160,6 +155,7 @@ bullstudio [options]
 | ------------------- | ----- | ---------------------------------------------- | ------------------------ |
 | `--redis <url>`     | `-r`  | Redis connection URL                           | `redis://localhost:6379` |
 | `--port <port>`     | `-p`  | Port to run the dashboard on                   | `4000`                   |
+| `--username <user>` |       | Username for HTTP Basic Auth (production only) | `bullstudio`             |
 | `--password <pass>` |       | Password for HTTP Basic Auth (production only) | (none)                   |
 | `--no-open`         |       | Don't open browser automatically               | Opens browser            |
 | `--help`            | `-h`  | Show help message                              |                          |
@@ -233,6 +229,9 @@ You can protect the dashboard with HTTP Basic Auth in **production mode only**. 
 # Using CLI flag
 bullstudio --password secret123
 
+## Custom username
+bullstudio --username bullstudio_admin --password secret123
+
 # Using environment variable
 BULLSTUDIO_PASSWORD=secret123 bullstudio
 
@@ -293,6 +292,7 @@ You can also configure bullstudio using environment variables:
 ```bash
 export REDIS_URL=redis://localhost:6379
 export PORT=4000
+export BULLSTUDIO_USERNAME=bullstudio
 export BULLSTUDIO_PASSWORD=secret123
 bullstudio
 ```
@@ -301,6 +301,7 @@ bullstudio
 | --------------------- | ---------------------------------------------- | ------------------------ |
 | `REDIS_URL`           | Redis connection URL                           | `redis://localhost:6379` |
 | `PORT`                | Port to run the dashboard on                   | `4000`                   |
+| `BULLSTUDIO_USERNAME` | Username for HTTP Basic Auth (production only) | `bullstudio`             |
 | `BULLSTUDIO_PASSWORD` | Password for HTTP Basic Auth (production only) | (none)                   |
 
 Command-line options take precedence over environment variables.

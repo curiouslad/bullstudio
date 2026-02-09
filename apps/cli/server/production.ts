@@ -11,7 +11,7 @@ import { pathToFileURL } from "node:url";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 // Authentication configuration
-const AUTH_USERNAME = "bullstudio";
+const username = process.env.BULLSTUDIO_USERNAME || "bullstudio";
 const password = process.env.BULLSTUDIO_PASSWORD;
 
 function isHealthCheck(pathname: string): boolean {
@@ -35,9 +35,9 @@ function checkAuth(req: IncomingMessage, res: ServerResponse): boolean {
   }
 
   const credentials = Buffer.from(auth.slice(6), "base64").toString();
-  const [username, pass] = credentials.split(":");
+  const [user, pass] = credentials.split(":");
 
-  if (username !== AUTH_USERNAME || pass !== password) {
+  if (user !== username || pass !== password) {
     res.writeHead(401, {
       "WWW-Authenticate": 'Basic realm="bullstudio"',
       "Content-Type": "text/plain",

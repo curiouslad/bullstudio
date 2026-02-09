@@ -22,6 +22,11 @@ const { values, positionals } = parseArgs({
       default: "4000",
       description: "Port to run the server on",
     },
+    username: {
+      type: "string",
+      description: "Username for HTTP Basic Auth (default: bullstudio)",
+      default: "bullstudio",
+    },
     password: {
       type: "string",
       description: "Password for HTTP Basic Auth (username: bullstudio)",
@@ -48,23 +53,25 @@ if (values.help) {
 bullstudio CLI - A lightweight queue management dashboard for BullMQ
 
 Usage:
-  bullstudio-cli [options]
-  npx bullstudio-cli [options]
+  bullstudio [options]
+  npx bullstudio [options]
 
 Options:
   -r, --redis <url>    Redis connection URL (default: redis://localhost:6379)
   -p, --port <port>    Port to run the server on (default: 4000)
-  --password <pass>    Password for HTTP Basic Auth (username: bullstudio)
+  --username <user>    Username for HTTP Basic Auth (default: bullstudio)
+  --password <pass>    Password for HTTP Basic Auth
   --no-open            Do not open browser automatically
   --dev                Run in development mode (requires source files)
   -h, --help           Show this help message
 
 Examples:
-  bullstudio-cli
-  bullstudio-cli -r redis://localhost:6379
-  bullstudio-cli -r redis://:password@myhost.com:6379
-  bullstudio-cli -p 5000 -r redis://localhost:6379
-  bullstudio-cli --password secret123
+  bullstudio
+  bullstudio -r redis://localhost:6379
+  bullstudio -r redis://:password@myhost.com:6379
+  bullstudio -p 5000 -r redis://localhost:6379
+  bullstudio --password secret123
+  bullstudio --username admin --password secret123
 `);
   process.exit(0);
 }
@@ -73,6 +80,7 @@ const redisUrl = values.redis || positionals[0] || "redis://localhost:6379";
 const port = values.port || "4000";
 const shouldOpen = !values["no-open"];
 const isDev = values.dev;
+const username = values.username;
 const password = values.password;
 
 // Validate Redis URL
@@ -97,7 +105,7 @@ console.log(`
 Redis: ${redisUrl}
 Port:  ${port}
 Mode:  ${isDev ? "development" : "production"}
-Auth:  ${password ? "enabled (username: bullstudio)" : "disabled"}
+Auth:  ${password ? `enabled (username: ${username})` : "disabled"}
 `);
 
 async function openBrowser(url: string) {
@@ -149,6 +157,7 @@ if (isDev) {
       REDIS_URL: redisUrl,
       PORT: port,
       HOST: "localhost",
+      BULLSTUDIO_USERNAME: username,
       BULLSTUDIO_PASSWORD: password,
     },
     stdio: "pipe",
